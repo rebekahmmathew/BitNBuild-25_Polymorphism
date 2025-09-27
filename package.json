@@ -2,7 +2,6 @@
   "name": "nourishnet",
   "version": "1.0.0",
   "description": "SaaS platform for tiffin services in India",
-  "main": "index.js",
   "scripts": {
     "predev": "node ./scripts/check-deps.js",
     "dev": "concurrently \"npm run backend:dev\" \"npm run dashboard:dev\"",
