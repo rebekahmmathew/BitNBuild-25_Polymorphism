@@ -124,6 +124,12 @@ npm run dashboard:dev  # Vendor Dashboard
 npm run app:dev       # Mobile App
 ```
 
+### Troubleshooting
+
+- If you see an error about a port already in use (e.g. Port 3001), set a different port in the backend `.env` or start the backend with a different PORT: `PORT=3002 npm run backend:dev`.
+- If AI or Maps features fail on startup, ensure `GEMINI_API_KEY` and `GOOGLE_MAPS_API_KEY` are set in the backend `.env` (these features are optional; the system will fall back to heuristic behavior when not available).
+- If `npm run dev` exits immediately with messages like "Exit prior to config file resolving" or "call config.load() before reading values", this message may come from an environment shell hook or global npm wrapper on your machine. Try running the individual services directly (e.g. `cd backend && npm run dev`) and check your shell rc files (`~/.zshrc`, `~/.bashrc`) for any custom startup scripts that print messages.
+
 ## 🎯 MVP Features
 
 This simplified version includes:

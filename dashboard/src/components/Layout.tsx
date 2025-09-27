@@ -115,7 +115,21 @@ const Layout = ({ children }: LayoutProps) => {
           </button>
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-            <div className="flex flex-1" />
+            <div className="flex items-center flex-1">
+              <label htmlFor="search" className="sr-only">Search</label>
+              <div className="relative w-full max-w-md">
+                <input
+                  id="search"
+                  placeholder="Search subscribers, menus, deliveries..."
+                  className="w-full rounded-md border border-secondary-200 py-2 pl-3 pr-10 text-sm placeholder:text-secondary-400 focus:ring-2 focus:ring-primary-100"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <svg className="w-4 h-4 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1116.65 3a7.5 7.5 0 010 13.65z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               <div className="flex items-center gap-x-2">
                 <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
@@ -128,6 +142,16 @@ const Layout = ({ children }: LayoutProps) => {
                   <p className="text-xs text-secondary-500">{user?.email}</p>
                 </div>
               </div>
+              <button
+                aria-label="Notifications"
+                className="p-2 rounded-md text-secondary-600 hover:bg-secondary-50"
+                title="Notifications"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </button>
+
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-x-2 text-sm text-secondary-600 hover:text-secondary-900"

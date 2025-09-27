@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -12,8 +10,8 @@ import {
   Cell,
   LineChart,
   Line,
-  Area,
-  AreaChart
+  AreaChart,
+  Area
 } from 'recharts';
 
 interface AnalyticsData {
@@ -54,7 +52,8 @@ const AnalyticsDashboard: React.FC = () => {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/analytics/overview?range=${timeRange}`, {
+  const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || '';
+  const response = await fetch(`${API_BASE}/analytics/overview?range=${timeRange}`, {
         headers: {
           'x-user-id': 'vendor_1'
         }
@@ -120,9 +119,22 @@ const AnalyticsDashboard: React.FC = () => {
   ];
 
   if (loading) {
+    // simple skeletons for metrics and charts
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-white p-6 rounded-lg shadow-sm border animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+              <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow-sm border h-80 animate-pulse"></div>
+          <div className="bg-white p-6 rounded-lg shadow-sm border h-80 animate-pulse"></div>
+        </div>
       </div>
     );
   }

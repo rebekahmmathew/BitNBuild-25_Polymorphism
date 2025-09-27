@@ -4,6 +4,7 @@
   "description": "SaaS platform for tiffin services in India",
   "main": "index.js",
   "scripts": {
+    "predev": "node ./scripts/check-deps.js",
     "dev": "concurrently \"npm run backend:dev\" \"npm run dashboard:dev\"",
     "backend:dev": "cd backend && npm run dev",
     "dashboard:dev": "cd dashboard && npm start",

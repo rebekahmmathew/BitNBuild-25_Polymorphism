@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useMutation } from 'react-query'
 import { Route, Brain, TrendingUp, Zap } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -50,7 +50,7 @@ const AIOptimization = () => {
   }
 
   return (
-    <div className="card">
+    <div className="bg-white rounded-lg shadow-sm border p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-x-2">
           <Brain className="h-6 w-6 text-purple-600" />
@@ -59,18 +59,19 @@ const AIOptimization = () => {
         <button
           onClick={handleOptimizeRoute}
           disabled={isOptimizing}
-          className="btn-primary flex items-center gap-x-2"
+          className="inline-flex items-center gap-x-2 rounded-md bg-purple-600 text-white px-3 py-2 text-sm font-medium hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
+          aria-live="polite"
         >
           {isOptimizing ? (
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
           ) : (
             <Zap className="h-4 w-4" />
           )}
-          {isOptimizing ? 'Optimizing...' : 'Optimize Routes'}
+          <span>{isOptimizing ? 'Optimizing...' : 'Optimize Routes'}</span>
         </button>
       </div>
 
-      {optimizationResult && (
+      {optimizationResult ? (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
           <div className="flex items-center gap-x-2 mb-2">
             <TrendingUp className="h-5 w-5 text-green-600" />
@@ -82,6 +83,8 @@ const AIOptimization = () => {
             <p>• Fuel consumption reduced by 8%</p>
           </div>
         </div>
+      ) : (
+        <div className="text-sm text-secondary-600 p-3 bg-gray-50 rounded">No optimization run yet. Click "Optimize Routes" to analyze current deliveries.</div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

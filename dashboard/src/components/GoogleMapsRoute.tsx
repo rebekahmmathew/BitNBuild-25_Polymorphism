@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer, InfoWindow } from '@react-google-maps/api';
 import { toast } from 'react-hot-toast';
 
@@ -38,9 +38,10 @@ const GoogleMapsRoute: React.FC<GoogleMapsRouteProps> = ({
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizedDeliveries, setOptimizedDeliveries] = useState<Delivery[]>(deliveries);
 
+  const mapsKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+    googleMapsApiKey: mapsKey,
     libraries: ['places', 'geometry']
   });
 
@@ -61,7 +62,8 @@ const GoogleMapsRoute: React.FC<GoogleMapsRouteProps> = ({
     setIsOptimizing(true);
     try {
       const deliveryIds = deliveries.map(d => d.id);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/ai/optimize`, {
+  const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || '';
+  const response = await fetch(`${API_BASE}/ai/optimize`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -141,6 +143,16 @@ const GoogleMapsRoute: React.FC<GoogleMapsRouteProps> = ({
     };
   };
 
+  // If API key isn't provided, show an informative message rather than failing silently
+  if (!mapsKey) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Google Maps Not Configured</h3>
+        <p className="text-sm text-gray-600">No Google Maps API key found. To enable map features, set <code className="bg-gray-100 px-1 rounded">VITE_GOOGLE_MAPS_API_KEY</code> in your dashboard `.env`.</p>
+      </div>
+    );
+  }
+
   if (!isLoaded) {
     return (
       <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
@@ -160,7 +172,9 @@ const GoogleMapsRoute: React.FC<GoogleMapsRouteProps> = ({
           <button
             onClick={optimizeRoute}
             disabled={isOptimizing || deliveries.length < 2}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 shadow-sm"
+            aria-disabled={isOptimizing || deliveries.length < 2}
+            aria-live="polite"
           >
             {isOptimizing ? (
               <>
@@ -261,10 +275,10 @@ const GoogleMapsRoute: React.FC<GoogleMapsRouteProps> = ({
           {optimizedDeliveries.map((delivery, index) => (
             <div
               key={delivery.id}
-              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer border border-transparent hover:border-secondary-100"
               onClick={() => setSelectedDelivery(delivery)}
             >
-              <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
                 {index + 1}
               </div>
               <div className="flex-1 min-w-0">

@@ -1,4 +1,4 @@
-import { genAI } from '../config/gemini';
+import { createGenAI } from '../config/gemini';
 
 export interface RouteOptimizationRequest {
   addresses: Array<{
@@ -28,7 +28,14 @@ export interface OptimizedRoute {
 
 export async function optimizeRouteWithAI(request: RouteOptimizationRequest): Promise<OptimizedRoute> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    let model: any;
+    try {
+      const genAI = createGenAI();
+      model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    } catch (e) {
+      console.warn('Gemini API not configured; using fallback optimization.');
+      throw e; // let caller fallback
+    }
     
     const prompt = `
     You are an AI route optimization expert for a tiffin delivery service in India. 
@@ -65,7 +72,7 @@ export async function optimizeRouteWithAI(request: RouteOptimizationRequest): Pr
     }
     `;
 
-    const result = await model.generateContent(prompt);
+  const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
     
@@ -119,7 +126,14 @@ function fallbackRouteOptimization(request: RouteOptimizationRequest): Optimized
 
 export async function generateMenuRecommendations(menuItems: string[], preferences: any): Promise<string[]> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    let model2: any;
+    try {
+      const genAI = createGenAI();
+      model2 = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    } catch (e) {
+      console.warn('Gemini API not configured; returning default recommendations.');
+      throw e;
+    }
     
     const prompt = `
     Generate menu recommendations for a tiffin service in India based on:
@@ -136,12 +150,12 @@ export async function generateMenuRecommendations(menuItems: string[], preferenc
     Return 5-7 specific menu recommendations as an array of strings.
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+  const result2 = await model2.generateContent(prompt);
+  const response2 = await result2.response;
+  const text = response2.text();
     
     // Extract recommendations from response
-    const lines = text.split('\n').filter(line => line.trim());
+  const lines = text.split('\n').filter((line: string) => line.trim());
     return lines.slice(0, 7);
     
   } catch (error) {
