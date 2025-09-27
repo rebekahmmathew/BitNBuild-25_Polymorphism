@@ -1,5 +1,6 @@
 import express from 'express';
 import { optimizeRouteWithAI, generateMenuRecommendations } from '../utils/geminiUtils';
+import { getOptimizedRoute, geocodeAddress, getETA } from '../utils/googleMapsUtils';
 import { storage } from '../utils/storage';
 
 const router = express.Router();
@@ -19,10 +20,10 @@ const authenticateUser = (req: any, res: any, next: any) => {
   next();
 };
 
-// Optimize delivery route using Gemini AI
+// Optimize delivery route using Google Maps + Gemini AI
 router.post('/optimize', authenticateUser, async (req: any, res) => {
   try {
-    const { deliveryIds, trafficConditions, weatherConditions } = req.body;
+    const { deliveryIds, trafficConditions, weatherConditions, vendorLocation } = req.body;
     
     if (!deliveryIds || !Array.isArray(deliveryIds)) {
       return res.status(400).json({ error: 'Delivery IDs array is required' });
@@ -37,6 +38,7 @@ router.post('/optimize', authenticateUser, async (req: any, res) => {
       if (!subscription) return null;
       
       return {
+        id: delivery.id,
         address: `${subscription.deliveryAddress.street}, ${subscription.deliveryAddress.city}`,
         coordinates: subscription.deliveryAddress.coordinates,
         priority: 'medium' as const
@@ -47,22 +49,142 @@ router.post('/optimize', authenticateUser, async (req: any, res) => {
       return res.status(404).json({ error: 'No valid deliveries found' });
     }
 
-    // Use Gemini AI to optimize route
-    const optimizedRoute = await optimizeRouteWithAI({
-      addresses: deliveries,
-      trafficConditions: trafficConditions || 'Normal',
-      weatherConditions: weatherConditions || 'Clear'
-    });
+    // Use vendor location or default to first delivery location
+    // Ensure origin and destination are plain Coordinates { lat, lng }
+    const origin: any = vendorLocation && typeof vendorLocation.lat === 'number' && typeof vendorLocation.lng === 'number'
+      ? vendorLocation
+      : deliveries[0].coordinates;
+
+    // Prepare waypoints for Google Maps (only include coordinates shape expected by utils)
+    const waypoints = deliveries.map(delivery => ({
+      address: delivery.address,
+      coordinates: delivery.coordinates
+    }));
+
+    // Try Google Maps optimization first
+    let optimizedRoute;
+    let optimizationMethod = 'AI Fallback';
+
+    try {
+  // Destination should be Coordinates (lat,lng) - use last delivery coordinates
+  const destination = waypoints[waypoints.length - 1].coordinates;
+  const googleMapsRoute = await getOptimizedRoute(origin, waypoints as any, destination);
+      
+      if (googleMapsRoute) {
+        // Update deliveries with optimized route
+        deliveries.forEach((delivery, index) => {
+          const waypoint = googleMapsRoute.waypoints.find(wp => wp.address === delivery.address);
+          if (waypoint) {
+            storage.update('deliveries', delivery.id, {
+              route: {
+                optimized: true,
+                waypoints: googleMapsRoute.waypoints,
+                totalDistance: googleMapsRoute.totalDistance,
+                totalTime: googleMapsRoute.totalTime,
+                order: waypoint.order
+              }
+            });
+          }
+        });
+
+        optimizedRoute = {
+          optimizedRoute: googleMapsRoute.optimizedRoute,
+          totalDistance: googleMapsRoute.totalDistance,
+          totalTime: googleMapsRoute.totalTime,
+          waypoints: googleMapsRoute.waypoints
+        };
+        optimizationMethod = 'Google Maps';
+      }
+    } catch (googleError) {
+      console.warn('Google Maps optimization failed, falling back to AI:', googleError);
+    }
+
+    // Fallback to AI optimization if Google Maps fails
+    if (!optimizedRoute) {
+      optimizedRoute = await optimizeRouteWithAI({
+        addresses: deliveries,
+        trafficConditions: trafficConditions || 'Normal',
+        weatherConditions: weatherConditions || 'Clear'
+      });
+    }
 
     res.json({
       success: true,
       optimizedRoute,
-      message: 'Route optimized successfully using AI'
+      totalDeliveries: deliveries.length,
+      estimatedTime: optimizedRoute.totalTime,
+      estimatedDistance: optimizedRoute.totalDistance,
+      optimizationMethod,
+      message: `Route optimized successfully using ${optimizationMethod}`
     });
   } catch (error) {
     console.error('Route optimization error:', error);
     res.status(500).json({ 
       error: 'Failed to optimize route',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Geocode address using Google Maps
+router.post('/geocode', authenticateUser, async (req: any, res) => {
+  try {
+    const { address } = req.body;
+    
+    if (!address) {
+      return res.status(400).json({ error: 'Address is required' });
+    }
+
+    const geocoded = await geocodeAddress(address);
+    
+    if (geocoded) {
+      res.json({
+        success: true,
+        address: geocoded.address,
+        coordinates: geocoded.coordinates,
+        formattedAddress: geocoded.formattedAddress
+      });
+    } else {
+      res.status(400).json({ error: 'Failed to geocode address' });
+    }
+  } catch (error) {
+    console.error('Geocoding error:', error);
+    res.status(500).json({ 
+      error: 'Failed to geocode address',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Get delivery route for specific delivery
+router.get('/delivery/:id/route', authenticateUser, async (req: any, res) => {
+  try {
+    const { id } = req.params;
+    const delivery = storage.findById('deliveries', id);
+    
+    if (!delivery) {
+      return res.status(404).json({ error: 'Delivery not found' });
+    }
+
+    const subscription = storage.findById('subscriptions', delivery.subscriptionId);
+    if (!subscription) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    res.json({
+      success: true,
+      delivery: {
+        id: delivery.id,
+        address: `${subscription.deliveryAddress.street}, ${subscription.deliveryAddress.city}`,
+        coordinates: subscription.deliveryAddress.coordinates,
+        route: delivery.route,
+        status: delivery.status
+      }
+    });
+  } catch (error) {
+    console.error('Get delivery route error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get delivery route',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
   }

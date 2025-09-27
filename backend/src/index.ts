@@ -68,11 +68,21 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);
-  
+
   // Seed demo data on startup
   seedDemoData();
+});
+
+server.on('error', (err: any) => {
+  if (err && err.code === 'EADDRINUSE') {
+    logger.error(`Port ${PORT} is already in use. Please free the port or set PORT env var to another port.`);
+    process.exit(1);
+  } else {
+    logger.error('Server error:', err);
+    process.exit(1);
+  }
 });
 
 export default app;

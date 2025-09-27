@@ -99,6 +99,18 @@ class LocalStorage {
       ['scheduled', 'in_progress'].includes(delivery.status)
     );
   }
+
+  // Clear all data
+  clearAll() {
+    this.data = {
+      users: [],
+      subscriptions: [],
+      menus: [],
+      deliveries: [],
+      staff: []
+    };
+    this.saveData();
+  }
 }
 
 export const storage = new LocalStorage();

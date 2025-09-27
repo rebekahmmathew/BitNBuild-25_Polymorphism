@@ -1,67 +1,115 @@
-import React from 'react'
-import { createStackNavigator } from '@react-navigation/stack'
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import { useSelector } from 'react-redux'
-import { RootState } from '../store/store'
-import { Ionicons } from '@expo/vector-icons'
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
+import { Ionicons } from '@expo/vector-icons';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store/store';
 
 // Screens
-import LoginScreen from '../screens/LoginScreen'
-import HomeScreen from '../screens/HomeScreen'
-import MenuScreen from '../screens/MenuScreen'
-import TrackingScreen from '../screens/TrackingScreen'
-import ProfileScreen from '../screens/ProfileScreen'
-import SubscriptionScreen from '../screens/SubscriptionScreen'
+import LoginScreen from '../screens/LoginScreen';
+import HomeScreen from '../screens/HomeScreen';
+import TrackingScreen from '../screens/TrackingScreen';
+import MenuScreen from '../screens/MenuScreen';
+import SubscriptionScreen from '../screens/SubscriptionScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
-const Stack = createStackNavigator()
-const Tab = createBottomTabNavigator()
+const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
-const TabNavigator = () => {
+const MainTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap
+          let iconName: keyof typeof Ionicons.glyphMap;
 
           if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline'
-          } else if (route.name === 'Menu') {
-            iconName = focused ? 'restaurant' : 'restaurant-outline'
+            iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Tracking') {
-            iconName = focused ? 'location' : 'location-outline'
+            iconName = focused ? 'bicycle' : 'bicycle-outline';
+          } else if (route.name === 'Menu') {
+            iconName = focused ? 'restaurant' : 'restaurant-outline';
+          } else if (route.name === 'Subscription') {
+            iconName = focused ? 'star' : 'star-outline';
           } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline'
+            iconName = focused ? 'person' : 'person-outline';
+          } else {
+            iconName = 'home-outline';
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />
+          return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#0ea5e9',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: '#3B82F6',
+        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarStyle: {
+          backgroundColor: 'white',
+          borderTopWidth: 1,
+          borderTopColor: '#E5E7EB',
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 60,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
+        headerShown: false,
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Menu" component={MenuScreen} />
-      <Tab.Screen name="Tracking" component={TrackingScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen}
+        options={{
+          title: 'Home',
+        }}
+      />
+      <Tab.Screen 
+        name="Tracking" 
+        component={TrackingScreen}
+        options={{
+          title: 'Tracking',
+        }}
+      />
+      <Tab.Screen 
+        name="Menu" 
+        component={MenuScreen}
+        options={{
+          title: 'Menu',
+        }}
+      />
+      <Tab.Screen 
+        name="Subscription" 
+        component={SubscriptionScreen}
+        options={{
+          title: 'Subscription',
+        }}
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen}
+        options={{
+          title: 'Profile',
+        }}
+      />
     </Tab.Navigator>
-  )
-}
+  );
+};
 
 const AppNavigator = () => {
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth)
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {!isAuthenticated ? (
-        <Stack.Screen name="Login" component={LoginScreen} />
-      ) : (
-        <>
-          <Stack.Screen name="Main" component={TabNavigator} />
-          <Stack.Screen name="Subscription" component={SubscriptionScreen} />
-        </>
-      )}
-    </Stack.Navigator>
-  )
-}
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {isAuthenticated ? (
+          <Stack.Screen name="MainTabs" component={MainTabs} />
+        ) : (
+          <Stack.Screen name="Login" component={LoginScreen} />
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+};
 
-export default AppNavigator
+export default AppNavigator;
