@@ -14,6 +14,7 @@ import {
   Users,
   Target
 } from 'lucide-react';
+import GoogleMap from './GoogleMap';
 
 interface MapLocation {
   id: string;
@@ -35,7 +36,7 @@ interface LiveMapProps {
 
 export default function LiveMap({ 
   locations, 
-  centerLocation = { lat: 12.9716, lng: 77.5946 }, // Default to Bangalore
+  centerLocation = { lat: 19.0760, lng: 72.8777 }, // Default to Mumbai
   showRoute = false,
   isDeliveryView = false,
   onLocationClick 
@@ -54,48 +55,6 @@ export default function LiveMap({
     return () => clearInterval(interval);
   }, []);
 
-  const getLocationIcon = (location: MapLocation) => {
-    switch (location.type) {
-      case 'vendor':
-        return '🏪';
-      case 'delivery_staff':
-        return '🚚';
-      case 'customer':
-        return location.status === 'delivered' ? '✅' : location.status === 'pending' ? '📍' : '🎯';
-      default:
-        return '📍';
-    }
-  };
-
-  const getLocationColor = (location: MapLocation) => {
-    switch (location.type) {
-      case 'vendor':
-        return 'bg-orange-500';
-      case 'delivery_staff':
-        return 'bg-blue-500';
-      case 'customer':
-        if (location.status === 'delivered') return 'bg-green-500';
-        if (location.status === 'pending') return 'bg-yellow-500';
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  // Simulate map bounds based on locations
-  const calculateMapBounds = () => {
-    if (locations.length === 0) return null;
-    
-    const lats = locations.map(loc => loc.coordinates.lat);
-    const lngs = locations.map(loc => loc.coordinates.lng);
-    
-    return {
-      north: Math.max(...lats) + 0.01,
-      south: Math.min(...lats) - 0.01,
-      east: Math.max(...lngs) + 0.01,
-      west: Math.min(...lngs) - 0.01
-    };
-  };
 
   return (
     <Card className={isFullscreen ? 'fixed inset-4 z-50' : ''}>
@@ -140,87 +99,23 @@ export default function LiveMap({
       
       <CardContent className="p-0">
         {/* Map Container */}
-        <div className={`relative bg-gradient-to-br from-blue-50 to-green-50 border-2 border-dashed border-gray-300 ${
+        <div className={`relative ${
           isFullscreen ? 'h-[calc(100vh-200px)]' : 'h-64 sm:h-80'
         }`}>
-          {/* Simulated Map Background */}
-          <div className="absolute inset-0 bg-gray-100 opacity-50">
-            <svg className="w-full h-full" viewBox="0 0 400 300">
-              {/* Grid lines to simulate map */}
-              <defs>
-                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" strokeWidth="1"/>
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
-              
-              {/* Simulated roads */}
-              <path d="M0,100 Q100,80 200,100 T400,100" stroke="#94a3b8" strokeWidth="3" fill="none" />
-              <path d="M100,0 Q120,100 100,200 T100,300" stroke="#94a3b8" strokeWidth="3" fill="none" />
-              <path d="M200,0 Q220,150 200,300" stroke="#94a3b8" strokeWidth="2" fill="none" />
-            </svg>
-          </div>
+          {/* Google Maps Integration */}
+          <GoogleMap
+            locations={locations}
+            centerLocation={centerLocation}
+            showRoute={showRoute}
+            isDeliveryView={isDeliveryView}
+            onLocationClick={(location) => {
+              setSelectedLocation(location);
+              onLocationClick?.(location);
+            }}
+            mapZoom={mapZoom}
+          />
 
-          {/* Location Markers */}
-          {locations.map((location, index) => {
-            // Convert lat/lng to approximate pixel positions (simplified)
-            const x = ((location.coordinates.lng - centerLocation.lng + 0.1) / 0.2) * 100;
-            const y = ((centerLocation.lat - location.coordinates.lat + 0.1) / 0.2) * 100;
-            
-            return (
-              <div
-                key={location.id}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
-                style={{ 
-                  left: `${Math.max(5, Math.min(95, x))}%`, 
-                  top: `${Math.max(5, Math.min(95, y))}%` 
-                }}
-                onClick={() => {
-                  setSelectedLocation(location);
-                  onLocationClick?.(location);
-                }}
-              >
-                <div className={`w-8 h-8 rounded-full ${getLocationColor(location)} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform`}>
-                  <span className="text-sm">{getLocationIcon(location)}</span>
-                </div>
-                
-                {/* Location tooltip */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                  {location.name}
-                  {location.eta && <div>ETA: {location.eta}</div>}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Route lines (if showRoute is true) */}
-          {showRoute && locations.length > 1 && (
-            <svg className="absolute inset-0 w-full h-full pointer-events-none">
-              {locations.slice(0, -1).map((location, index) => {
-                const nextLocation = locations[index + 1];
-                const x1 = ((location.coordinates.lng - centerLocation.lng + 0.1) / 0.2) * 100;
-                const y1 = ((centerLocation.lat - location.coordinates.lat + 0.1) / 0.2) * 100;
-                const x2 = ((nextLocation.coordinates.lng - centerLocation.lng + 0.1) / 0.2) * 100;
-                const y2 = ((centerLocation.lat - nextLocation.coordinates.lat + 0.1) / 0.2) * 100;
-                
-                return (
-                  <line
-                    key={`route-${index}`}
-                    x1={`${Math.max(5, Math.min(95, x1))}%`}
-                    y1={`${Math.max(5, Math.min(95, y1))}%`}
-                    x2={`${Math.max(5, Math.min(95, x2))}%`}
-                    y2={`${Math.max(5, Math.min(95, y2))}%`}
-                    stroke="#3b82f6"
-                    strokeWidth="3"
-                    strokeDasharray="5,5"
-                    className="animate-pulse"
-                  />
-                );
-              })}
-            </svg>
-          )}
-
-          {/* Map Controls */}
+          {/* Map Controls Overlay */}
           <div className="absolute top-4 right-4 bg-white p-2 rounded-lg shadow-md">
             <div className="text-xs text-gray-600">Zoom: {mapZoom}</div>
             <div className="text-xs text-gray-600">{locations.length} locations</div>

@@ -24,7 +24,7 @@ import {
   Info
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import LiveMap from './LiveMap';
+import DeliveryStaffMap from './DeliveryStaffMap';
 
 interface DeliveryStaffAppProps {
   user: any;
@@ -70,52 +70,52 @@ export default function DeliveryStaffApp({ user, onLogout }: DeliveryStaffAppPro
   });
 
   useEffect(() => {
-    // Mock data for today's orders
+    // Mock data for today's orders - Mumbai based
     const mockOrders: Order[] = [
       {
         id: 'ORD001',
-        customer: 'Priya Sharma',
+        customer: 'Amit Patel',
         phone: '+91 98765 43210',
-        address: 'B-204, Green Valley Apartments, Koramangala, Bangalore - 560034',
+        address: 'B-204, Green Valley Apartments, Bandra West, Mumbai - 400050',
         items: ['Dal Tadka', 'Jeera Rice', 'Mixed Veg Curry'],
         totalAmount: 230,
         status: 'delivered',
         estimatedTime: '12:30 PM',
-        coordinates: { lat: 12.9352, lng: 77.6245 }
+        coordinates: { lat: 19.0544, lng: 72.8406 }
       },
       {
         id: 'ORD002',
-        customer: 'Raj Patel',
+        customer: 'Sneha Desai',
         phone: '+91 87654 32109',
-        address: 'A-101, Sunrise Complex, Whitefield, Bangalore - 560066',
+        address: 'A-101, Sunrise Complex, Powai, Mumbai - 400076',
         items: ['Chicken Curry', 'Chapati', 'Dal'],
         totalAmount: 285,
         status: 'picked_up',
         estimatedTime: '1:15 PM',
         notes: 'Call before arriving',
-        coordinates: { lat: 12.9698, lng: 77.7500 }
+        coordinates: { lat: 19.1176, lng: 72.9060 }
       },
       {
         id: 'ORD003',
-        customer: 'Vikram Modi',
+        customer: 'Rahul Singh',
         phone: '+91 65432 10987',
-        address: 'D-12, Metro Heights, Indiranagar, Bangalore - 560038',
+        address: 'D-12, Metro Heights, Malad West, Mumbai - 400064',
         items: ['Paneer Butter Masala', 'Naan', 'Basmati Rice'],
         totalAmount: 320,
         status: 'pending',
         estimatedTime: '2:00 PM',
-        coordinates: { lat: 12.9716, lng: 77.6412 }
+        coordinates: { lat: 19.1868, lng: 72.8481 }
       },
       {
         id: 'ORD004',
-        customer: 'Anita Singh',
+        customer: 'Priya Iyer',
         phone: '+91 76543 21098',
-        address: 'C-305, Tech Park Residency, Electronic City, Bangalore - 560100',
+        address: 'C-305, Tech Park Residency, Juhu, Mumbai - 400049',
         items: ['Rajma Chawal', 'Raita', 'Pickle'],
         totalAmount: 195,
         status: 'pending',
         estimatedTime: '2:45 PM',
-        coordinates: { lat: 12.8456, lng: 77.6632 }
+        coordinates: { lat: 19.1074, lng: 72.8263 }
       }
     ];
 
@@ -125,8 +125,8 @@ export default function DeliveryStaffApp({ user, onLogout }: DeliveryStaffAppPro
     // Set route info
     const pendingOrders = mockOrders.filter(order => order.status !== 'delivered');
     setRouteInfo({
-      totalDistance: '24.5 km',
-      estimatedTime: '1h 15m',
+      totalDistance: '32.8 km',
+      estimatedTime: '1h 45m',
       ordersRemaining: pendingOrders.length
     });
 
@@ -169,8 +169,8 @@ export default function DeliveryStaffApp({ user, onLogout }: DeliveryStaffAppPro
           });
         },
         () => {
-          // Default to Bangalore center if location access denied
-          setCurrentLocation({ lat: 12.9716, lng: 77.5946 });
+          // Default to Mumbai center if location access denied
+          setCurrentLocation({ lat: 19.0760, lng: 72.8777 });
         }
       );
     }
@@ -485,66 +485,18 @@ export default function DeliveryStaffApp({ user, onLogout }: DeliveryStaffAppPro
           </Card>
         )}
 
-        {/* Route Optimization with Live Map */}
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <Route className="h-5 w-5" />
-                Live Delivery Tracking
-              </h2>
-              <p className="text-sm text-gray-600">Optimized route for today's deliveries</p>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-4 text-sm">
-              <span className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded">
-                <MapPin className="h-3 w-3 text-blue-600" />
-                {routeInfo.totalDistance}
-              </span>
-              <span className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded">
-                <Timer className="h-3 w-3 text-green-600" />
-                {routeInfo.estimatedTime}
-              </span>
-              <span className="flex items-center gap-1 bg-orange-50 px-2 py-1 rounded">
-                <Target className="h-3 w-3 text-orange-600" />
-                {routeInfo.ordersRemaining} stops
-              </span>
-            </div>
-          </div>
-          
-          <LiveMap
-            locations={[
-              // Current location (delivery staff)
-              {
-                id: 'delivery-staff',
-                name: 'Your Location',
-                address: 'Current Position',
-                coordinates: currentLocation || { lat: 12.9716, lng: 77.5946 },
-                type: 'delivery_staff'
-              },
-              // Customer locations from orders
-              ...todaysOrders.map(order => ({
-                id: order.id,
-                name: order.customer,
-                address: order.address,
-                coordinates: order.coordinates,
-                type: 'customer' as const,
-                status: order.status,
-                eta: order.estimatedTime
-              }))
-            ]}
-            centerLocation={currentLocation || { lat: 12.9716, lng: 77.5946 }}
-            showRoute={true}
-            isDeliveryView={true}
-            onLocationClick={(location) => {
-              if (location.type === 'customer') {
-                const order = todaysOrders.find(o => o.id === location.id);
-                if (order) {
-                  toast.info(`Selected ${order.customer} - ${order.address}`);
-                }
-              }
-            }}
-          />
-        </div>
+        {/* Enhanced Delivery Staff Map with Directions */}
+        <DeliveryStaffMap
+          staffId="staff-001"
+          onRouteOptimized={(route) => {
+            toast.success(`Route optimized! ${route.totalDistance}km in ${route.totalTime}mins`);
+            setRouteInfo({
+              totalDistance: `${route.totalDistance} km`,
+              estimatedTime: `${route.totalTime} mins`,
+              ordersRemaining: route.route.length - 1
+            });
+          }}
+        />
 
         {/* Today's Orders */}
         <Card>

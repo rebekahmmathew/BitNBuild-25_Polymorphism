@@ -164,6 +164,96 @@ export default function VendorDashboard({ user, onLogout }: VendorDashboardProps
               />
             </div>
 
+            {/* Live Map Section with AI Route Optimization */}
+            <div className="mb-6">
+              <LiveMap
+                locations={[
+                  {
+                    id: 'vendor-1',
+                    name: 'NourishNet Kitchen - Mumbai Central',
+                    address: '123, Dr. A.B. Road, Mumbai Central, Mumbai 400008',
+                    coordinates: { lat: 19.0760, lng: 72.8777 },
+                    type: 'vendor',
+                    status: 'active'
+                  },
+                  {
+                    id: 'delivery-1',
+                    name: 'Rajesh Kumar - Delivery Staff',
+                    address: 'Near CST Station, Mumbai',
+                    coordinates: { lat: 19.0176, lng: 72.8562 },
+                    type: 'delivery_staff',
+                    status: 'active',
+                    eta: '12 mins'
+                  },
+                  {
+                    id: 'delivery-2',
+                    name: 'Priya Sharma - Delivery Staff',
+                    address: 'Andheri West, Mumbai',
+                    coordinates: { lat: 19.1197, lng: 72.8464 },
+                    type: 'delivery_staff',
+                    status: 'busy',
+                    eta: '8 mins'
+                  },
+                  {
+                    id: 'customer-1',
+                    name: 'Amit Patel',
+                    address: 'Bandra West, Mumbai',
+                    coordinates: { lat: 19.0544, lng: 72.8406 },
+                    type: 'customer',
+                    status: 'pending',
+                    eta: '20 mins',
+                    priority: 1
+                  },
+                  {
+                    id: 'customer-2',
+                    name: 'Sneha Desai',
+                    address: 'Powai, Mumbai',
+                    coordinates: { lat: 19.1176, lng: 72.9060 },
+                    type: 'customer',
+                    status: 'pending',
+                    eta: '25 mins',
+                    priority: 2
+                  },
+                  {
+                    id: 'customer-3',
+                    name: 'Rahul Singh',
+                    address: 'Malad West, Mumbai',
+                    coordinates: { lat: 19.1868, lng: 72.8481 },
+                    type: 'customer',
+                    status: 'pending',
+                    eta: '30 mins',
+                    priority: 3
+                  },
+                  {
+                    id: 'customer-4',
+                    name: 'Priya Iyer',
+                    address: 'Juhu, Mumbai',
+                    coordinates: { lat: 19.1074, lng: 72.8263 },
+                    type: 'customer',
+                    status: 'delivered'
+                  },
+                  {
+                    id: 'customer-5',
+                    name: 'Vikram Joshi',
+                    address: 'Thane West, Mumbai',
+                    coordinates: { lat: 19.2183, lng: 72.9781 },
+                    type: 'customer',
+                    status: 'pending',
+                    eta: '35 mins',
+                    priority: 4
+                  }
+                ]}
+                centerLocation={{ lat: 19.0760, lng: 72.8777 }}
+                showRoute={true}
+                isDeliveryView={false}
+                enableRouteOptimization={true}
+                enableRealTimeTracking={true}
+                onLocationClick={(location) => {
+                  console.log('Location clicked:', location);
+                }}
+              />
+            </div>
+
             {/* Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
